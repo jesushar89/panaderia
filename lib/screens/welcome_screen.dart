@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
+
+    Future<void> testFirestore() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance.collection('test').get();
+      print("Firestore datos: ${snapshot.docs.length}");
+    } catch (e) {
+      print("Error Firestore: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
