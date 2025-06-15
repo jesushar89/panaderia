@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 import 'productos_categoria_screen.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CatalogoScreen extends StatelessWidget {
   const CatalogoScreen({super.key});

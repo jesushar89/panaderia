@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../theme/colors.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -279,6 +280,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error al guardar: ${e.toString()}')),
+      );
+    }
+
+    try {
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        password: _passwordController.text.trim(),
+        email: _emailController.text.trim(),
+      );
+      // Después del registro exitoso, deja que Firebase lo detecte y redirija.
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: ${e.toString()}")),
       );
     }
   }
