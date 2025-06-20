@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'providers/cart_provider.dart';
 
@@ -34,20 +33,38 @@ class PanaderiaDeliciaApp extends StatelessWidget {
       title: 'Panadería Delicia',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primaryColor: AppColors.boton,
-        scaffoldBackgroundColor: AppColors.fondoClaro,
+        primaryColor: AppColors.primary,
+        scaffoldBackgroundColor: AppColors.backgroundLight,
         fontFamily: 'Arial',
         colorScheme: ColorScheme.fromSwatch().copyWith(
-          primary: AppColors.boton,
-          secondary: AppColors.acento,
+          primary: AppColors.primary,
+          secondary: AppColors.secondary,
         ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.boton,
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            backgroundColor: AppColors.button,
+            foregroundColor: Colors.white,
+            side: const BorderSide(color: AppColors.button, width: 1.4),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: AppColors.accent,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: AppColors.highlight),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          ),
+          labelStyle: const TextStyle(
+            color: AppColors.secondary,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ),

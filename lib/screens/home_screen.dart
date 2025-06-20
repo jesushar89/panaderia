@@ -39,9 +39,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.fondoClaro,
+      backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
-        backgroundColor: AppColors.principal,
+        backgroundColor: AppColors.primary,
         elevation: 0,
         title: Text(
           _titles[_selectedIndex],
@@ -74,8 +74,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       top: 6,
                       child: Container(
                         padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: Colors.orange,
+                        decoration: BoxDecoration(
+                          color: AppColors.highlight,
                           shape: BoxShape.circle,
                         ),
                         child: Text(
@@ -103,8 +103,8 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.white,
         currentIndex: _selectedIndex,
-        selectedItemColor: AppColors.boton,
-        unselectedItemColor: AppColors.secundario.withOpacity(0.5),
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.secondary.withOpacity(0.5),
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
         items: const [
@@ -136,48 +136,56 @@ class _InicioScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
       children: [
+        // Card de bienvenida modernizada
         Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: AppColors.acento.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(16),
+            color: AppColors.accent,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.highlight, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.08),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: const [
               Text(
-                '👋 ¡Hola, Andrea!',
+                '👋 ¡Hola, Invitad@!',
                 style: TextStyle(
-                  fontSize: 26,
+                  fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.secundario,
+                  color: AppColors.primary,
                 ),
               ),
               SizedBox(height: 8),
               Text(
-                '🍞 Bienvenida a Delicia.\nTu lugar para disfrutar dulces momentos ✨',
+                '🍞 Bienvenido a la panaderia Delicia.\nDisfruta dulces momentos y frescura artesanal ✨',
                 style: TextStyle(
-                  fontSize: 16,
-                  color: AppColors.secundario,
+                  fontSize: 15,
+                  color: AppColors.secondary,
                   height: 1.4,
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 30),
         const Text(
           '🧁 Productos recientes',
           style: TextStyle(
-            fontSize: 18,
+            fontSize: 17,
             fontWeight: FontWeight.bold,
-            color: AppColors.secundario,
+            color: AppColors.primary,
           ),
         ),
-        const SizedBox(height: 16),
-        // Llamamos a Firestore para cargar los productos recientes
+        const SizedBox(height: 14),
         _productosRecientes(),
       ],
     );
@@ -187,9 +195,9 @@ class _InicioScreen extends StatelessWidget {
   Widget _productosRecientes() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
-          .collection('productos') // Nombre de la colección en Firestore
-          .orderBy('timestamp', descending: true) // Ordenamos por el campo 'timestamp' (asegurándonos de que sea reciente)
-          .limit(3) // Limitar a los últimos 3 productos recientes (puedes ajustar el número)
+          .collection('productos')
+          .orderBy('timestamp', descending: true)
+          .limit(3)
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -211,7 +219,7 @@ class _InicioScreen extends StatelessWidget {
             var producto = doc.data() as Map<String, dynamic>;
             return _productoCard(
               producto['nombre'],
-              producto['imagen'] ?? 'assets/images/pan.png', // Ahora usa Image.network para cargar la URL de la imagen
+              producto['imagen'] ?? 'assets/images/pan.png',
             );
           }).toList(),
         );
@@ -221,26 +229,27 @@ class _InicioScreen extends StatelessWidget {
 
   static Widget _productoCard(String nombre, String imgPath) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.highlight, width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
+            color: AppColors.primary.withOpacity(0.06),
+            blurRadius: 7,
             offset: const Offset(0, 3),
           ),
         ],
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
+        contentPadding: const EdgeInsets.all(13),
         leading: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(9),
           child: Image.network(
-            imgPath, // Usamos Image.network para cargar imágenes desde una URL
-            width: 60,
-            height: 60,
+            imgPath,
+            width: 50,
+            height: 50,
             fit: BoxFit.cover,
           ),
         ),
@@ -248,11 +257,12 @@ class _InicioScreen extends StatelessWidget {
           nombre,
           style: const TextStyle(
             fontWeight: FontWeight.w600,
-            fontSize: 16,
+            fontSize: 15,
+            color: AppColors.primary,
           ),
         ),
         subtitle: const Text('Disponible hoy'),
-        trailing: const Icon(Icons.chevron_right, color: AppColors.secundario),
+        trailing: const Icon(Icons.chevron_right, color: AppColors.secondary),
         onTap: () {
           // Acción futura: ver detalle del producto
         },

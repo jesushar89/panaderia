@@ -10,21 +10,18 @@ class CarritoScreen extends StatefulWidget {
 }
 
 class _CarritoScreenState extends State<CarritoScreen> {
-  // Variable para almacenar la opción de entrega (envío o recogida)
-  String tipoEntrega = 'Recoger en tienda'; // Valor por defecto
-  double costoEnvio = 0.0; // Costo adicional por envío
+  String tipoEntrega = 'Recoger en tienda';
+  double costoEnvio = 0.0;
 
   void _actualizarCantidad(DocumentReference ref, int nuevaCantidad) async {
     if (nuevaCantidad <= 0) {
-      await ref.delete(); // Eliminar el producto si la cantidad llega a 0
+      await ref.delete();
     } else {
       await ref.update({'cantidad': nuevaCantidad});
     }
   }
 
   void _confirmarPedido(BuildContext context) {
-    // Aquí puedes agregar la lógica para confirmar el pedido
-    // Como un resumen del pedido y luego proceder con la compra
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Pedido confirmado')),
     );
@@ -33,7 +30,7 @@ class _CarritoScreenState extends State<CarritoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.fondoClaro,
+      backgroundColor: AppColors.backgroundLight,
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('carrito')
@@ -50,7 +47,28 @@ class _CarritoScreenState extends State<CarritoScreen> {
           final items = snapshot.data!.docs;
 
           if (items.isEmpty) {
-            return const Center(child: Text('Tu carrito está vacío'));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.shopping_cart_outlined, size: 64, color: AppColors.primary),
+                  const SizedBox(height: 18),
+                  const Text(
+                    'Tu carrito está vacío',
+                    style: TextStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Agrega productos para continuar',
+                    style: TextStyle(fontSize: 15, color: AppColors.secondary),
+                  ),
+                ],
+              ),
+            );
           }
 
           double total = 0;
@@ -60,28 +78,23 @@ class _CarritoScreenState extends State<CarritoScreen> {
             final data = doc.data() as Map<String, dynamic>;
             final precioFinal = data['precio'] ?? 0;
             final cantidad = data['cantidad'] ?? 1;
-
-            // El precio ya incluye el IGV, así que calculamos el valor sin IGV
             final precioBase = precioFinal / 1.18;
-            final igvProducto = precioBase * 0.18; // El IGV calculado
-
-            // Sumar al total
-            total += precioFinal * cantidad; // El total final incluye el IGV
-            totalIGV += igvProducto * cantidad; // Solo para mostrar el IGV acumulado
+            final igvProducto = precioBase * 0.18;
+            total += precioFinal * cantidad;
+            totalIGV += igvProducto * cantidad;
           }
 
-          // Agregar costo de envío si es necesario
           if (tipoEntrega == 'Envío') {
-            costoEnvio = 5.0; // Se agrega S/ 5.00 si es envío
+            costoEnvio = 5.0;
           } else {
-            costoEnvio = 0.0; // No hay costo adicional para recogida en tienda
+            costoEnvio = 0.0;
           }
 
           return Column(
             children: [
               Expanded(
                 child: ListView.builder(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                   itemCount: items.length,
                   itemBuilder: (context, index) {
                     final doc = items[index];
@@ -89,48 +102,57 @@ class _CarritoScreenState extends State<CarritoScreen> {
                     final precioFinal = producto['precio'] ?? 0;
                     final cantidad = producto['cantidad'] ?? 1;
 
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 14),
+                      decoration: BoxDecoration(
+                        color: AppColors.accent,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppColors.highlight, width: 1),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withOpacity(0.08),
+                            blurRadius: 7,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
-                      elevation: 5,
                       child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                         leading: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: Image.network(
                             producto['imagen'],
-                            width: 50,
-                            height: 50,
+                            width: 46,
+                            height: 46,
                             fit: BoxFit.cover,
                           ),
                         ),
                         title: Text(
                           producto['nombre'],
                           style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 14),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                            color: AppColors.primary,
+                          ),
                         ),
                         subtitle: Text(
-                          'S/.$precioFinal soles x $cantidad',
-                          style: const TextStyle(fontSize: 12),
+                          'S/.${precioFinal.toStringAsFixed(2)} x $cantidad',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.secondary,
+                          ),
                         ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              icon: const Icon(Icons.remove_circle_outline),
-                              onPressed: () => _actualizarCantidad(
-                                doc.reference,
-                                cantidad - 1,
-                              ),
+                              icon: const Icon(Icons.remove_circle_outline, color: AppColors.secondary),
+                              onPressed: () => _actualizarCantidad(doc.reference, cantidad - 1),
                             ),
-                            Text('$cantidad'),
+                            Text('$cantidad', style: const TextStyle(fontSize: 15)),
                             IconButton(
-                              icon: const Icon(Icons.add_circle_outline),
-                              onPressed: () => _actualizarCantidad(
-                                doc.reference,
-                                cantidad + 1,
-                              ),
+                              icon: const Icon(Icons.add_circle_outline, color: AppColors.primary),
+                              onPressed: () => _actualizarCantidad(doc.reference, cantidad + 1),
                             ),
                           ],
                         ),
@@ -139,164 +161,113 @@ class _CarritoScreenState extends State<CarritoScreen> {
                   },
                 ),
               ),
-              // Opción de Envío o Recogida con botones redondeados
+              // Opción de Envío o Recogida
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 2),
                 child: Column(
                   children: [
                     const Text(
                       'Selecciona la opción de entrega:',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary),
                     ),
+                    const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              tipoEntrega = 'Recoger en tienda';
-                            });
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: tipoEntrega == 'Recoger en tienda'
-                                ? AppColors.boton
-                                : Colors.grey,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 12), // Ajusté el tamaño del botón
-                          ),
-                          child: const Text(
-                            'Recoger en tienda',
-                            style: TextStyle(fontSize: 14, color: Colors.white),
-                          ),
-                        ),
-                        const SizedBox(width: 20),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              tipoEntrega = 'Envío';
-                            });
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: tipoEntrega == 'Envío'
-                                ? AppColors.boton
-                                : Colors.grey,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 12), // Ajusté el tamaño del botón
-                          ),
-                          child: const Text(
-                            'Envío (S/. 5.00 adicional)',
-                            style: TextStyle(fontSize: 14, color: Colors.white),
-                          ),
-                        ),
+                        _deliveryOption('Recoger en tienda', tipoEntrega == 'Recoger en tienda', () {
+                          setState(() => tipoEntrega = 'Recoger en tienda');
+                        }),
+                        const SizedBox(width: 18),
+                        _deliveryOption('Envío (S/. 5.00)', tipoEntrega == 'Envío', () {
+                          setState(() => tipoEntrega = 'Envío');
+                        }),
                       ],
                     ),
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                color: Colors.white,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Total (sin IGV):',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      'S/.${(total - totalIGV).toStringAsFixed(2)} soles',
-                      style: const TextStyle(
-                          fontSize: 16, color: AppColors.boton),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                color: Colors.white,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'IGV (18%):',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      'S/.${totalIGV.toStringAsFixed(2)} soles',
-                      style: const TextStyle(
-                          fontSize: 16, color: AppColors.boton),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                color: Colors.white,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Envío:',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      'S/.${costoEnvio.toStringAsFixed(2)} soles',
-                      style: const TextStyle(
-                          fontSize: 16, color: AppColors.boton),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                color: Colors.white,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Total a Pagar:',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      'S/.${(total + costoEnvio).toStringAsFixed(2)} soles',
-                      style: const TextStyle(
-                          fontSize: 16, color: AppColors.boton),
-                    ),
-                  ],
-                ),
-              ),
+              const SizedBox(height: 10),
+              // Resumen de totales
+              _resumenItem('Total (sin IGV):', (total - totalIGV)),
+              _resumenItem('IGV (18%):', totalIGV),
+              _resumenItem('Envío:', costoEnvio),
+              _resumenItem('Total a Pagar:', total + costoEnvio, highlight: true),
               // Botón de Confirmación de Pedido
               Padding(
-                padding: const EdgeInsets.all(16),
-                child: ElevatedButton(
-                  onPressed: () => _confirmarPedido(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.boton, // Cambié 'primary' a 'backgroundColor'
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                padding: const EdgeInsets.all(18),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () => _confirmarPedido(context),
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: AppColors.primary, width: 1.4),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
-                    minimumSize: const Size(double.infinity, 50),
-                  ),
-                  child: const Text(
-                    'Confirmar Pedido',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold, // Aumenté el peso de la fuente
-                      color: Colors.white, // Color blanco para el texto
+                    child: const Text(
+                      'Confirmar Pedido',
+                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
-              )
+              ),
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _deliveryOption(String text, bool selected, VoidCallback onPressed) {
+    return OutlinedButton(
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        backgroundColor: selected ? AppColors.primary : AppColors.accent,
+        foregroundColor: selected ? Colors.white : AppColors.primary,
+        side: BorderSide(color: selected ? AppColors.primary : AppColors.highlight, width: 1.4),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
+    );
+  }
+
+  Widget _resumenItem(String label, double valor, {bool highlight = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+      color: Colors.white,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: highlight ? FontWeight.bold : FontWeight.w500,
+              color: highlight ? AppColors.primary : AppColors.textDark,
+            ),
+          ),
+          Text(
+            'S/.${valor.toStringAsFixed(2)}',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: highlight ? FontWeight.bold : FontWeight.normal,
+              color: highlight ? AppColors.primary : AppColors.textDark,
+            ),
+          ),
+        ],
       ),
     );
   }

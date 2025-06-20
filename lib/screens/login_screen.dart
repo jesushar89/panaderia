@@ -18,63 +18,69 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.fondoClaro,
+      backgroundColor: AppColors.backgroundLight,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 10),
             child: Form(
               key: _formKey,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text(
-                    '¡Bienvenido de nuevo!',
+                    '¡Bienvenido!',
                     style: TextStyle(
-                      fontSize: 24,
+                      fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.secundario,
+                      color: AppColors.primary,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   const Text(
-                    'Inicia sesión con tu correo y contraseña para continuar.',
+                    'Accede con tu cuenta para continuar.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.secundario,
+                      fontSize: 15,
+                      color: AppColors.secondary,
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 30),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 28),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(28),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.accent, width: 1),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.07),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        )
+                          color: AppColors.primary.withOpacity(0.07),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
                       ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        // Email
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
-                          style: const TextStyle(color: AppColors.secundario),
-                          decoration: const InputDecoration(
+                          style: const TextStyle(color: AppColors.textDark, fontSize: 16),
+                          decoration: InputDecoration(
                             labelText: 'Correo electrónico',
-                            labelStyle: TextStyle(color: AppColors.secundario),
-                            border: UnderlineInputBorder(),
-                            enabledBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(color: AppColors.secundario, width: 1.2),
+                            labelStyle: const TextStyle(color: AppColors.secondary),
+                            filled: true,
+                            fillColor: AppColors.accent,
+                            contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: const BorderSide(color: AppColors.highlight),
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                            focusedBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(color: AppColors.secundario, width: 1.6),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                              borderRadius: BorderRadius.circular(8),
                             ),
                           ),
                           validator: (value) {
@@ -84,25 +90,30 @@ class _LoginScreenState extends State<LoginScreen> {
                             return null;
                           },
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 20),
+                        // Password
                         TextFormField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
-                          style: const TextStyle(color: AppColors.secundario),
+                          style: const TextStyle(color: AppColors.textDark, fontSize: 16),
                           decoration: InputDecoration(
                             labelText: 'Contraseña',
-                            labelStyle: const TextStyle(color: AppColors.secundario),
-                            border: const UnderlineInputBorder(),
-                            enabledBorder: const UnderlineInputBorder(
-                              borderSide: BorderSide(color: AppColors.secundario, width: 1.2),
+                            labelStyle: const TextStyle(color: AppColors.secondary),
+                            filled: true,
+                            fillColor: AppColors.accent,
+                            contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: const BorderSide(color: AppColors.highlight),
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                            focusedBorder: const UnderlineInputBorder(
-                              borderSide: BorderSide(color: AppColors.secundario, width: 1.6),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                              borderRadius: BorderRadius.circular(8),
                             ),
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                                color: AppColors.secundario,
+                                color: AppColors.primary,
                               ),
                               onPressed: () {
                                 setState(() {
@@ -118,23 +129,27 @@ class _LoginScreenState extends State<LoginScreen> {
                             return null;
                           },
                         ),
-                        const SizedBox(height: 32),
-                        ElevatedButton(
-                          onPressed: _iniciarSesion,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.boton,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(32),
+                        const SizedBox(height: 26),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton(
+                            onPressed: _iniciarSesion,
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              side: const BorderSide(color: AppColors.primary, width: 1.4),
+                              padding: const EdgeInsets.symmetric(vertical: 15),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                             ),
-                            elevation: 3,
-                          ),
-                          child: const Text(
-                            'Iniciar sesión',
-                            style: TextStyle(fontSize: 16, color: Colors.white),
+                            child: const Text(
+                              'Iniciar sesión',
+                              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 10),
                         TextButton(
                           onPressed: () {
                             Navigator.pushReplacementNamed(context, '/home');
@@ -142,31 +157,31 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: const Text(
                             'Continuar como invitado',
                             style: TextStyle(
-                              color: AppColors.secundario,
+                              color: AppColors.secondary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 15),
                         TextButton(
                           onPressed: () {
-                            // Lógica de recuperación
+                            // Lógica de recuperación (puedes implementar la pantalla extra aquí si se requiere)
                           },
                           child: const Text(
                             '¿Olvidaste tu contraseña?',
-                            style: TextStyle(color: AppColors.secundario),
+                            style: TextStyle(color: AppColors.secondary, fontWeight: FontWeight.w500),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Text(
                         '¿No tienes una cuenta?',
-                        style: TextStyle(color: AppColors.secundario),
+                        style: TextStyle(color: AppColors.textDark),
                       ),
                       TextButton(
                         onPressed: () {
@@ -174,7 +189,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         },
                         child: const Text(
                           'Regístrate',
-                          style: TextStyle(color: AppColors.boton),
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],
