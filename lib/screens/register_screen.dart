@@ -52,7 +52,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const SizedBox(height: 16),
                   // Nueva tarjeta de formulario: más plana, cuadrada, ligera
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 30),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 22, vertical: 30),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
@@ -91,7 +92,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             style: OutlinedButton.styleFrom(
                               backgroundColor: AppColors.button,
                               foregroundColor: Colors.white,
-                              side: const BorderSide(color: AppColors.button, width: 1.4),
+                              side: const BorderSide(
+                                  color: AppColors.button, width: 1.4),
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
@@ -99,7 +101,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             child: const Text(
                               'Registrarse',
-                              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                  fontSize: 17, fontWeight: FontWeight.bold),
                             ),
                           ),
                         ),
@@ -145,10 +148,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       style: const TextStyle(color: AppColors.textDark, fontSize: 16),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: AppColors.secondary, fontWeight: FontWeight.w500),
+        labelStyle: const TextStyle(
+            color: AppColors.secondary, fontWeight: FontWeight.w500),
         filled: true,
         fillColor: AppColors.accent,
-        contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
         enabledBorder: OutlineInputBorder(
           borderSide: const BorderSide(color: AppColors.highlight),
           borderRadius: BorderRadius.circular(8),
@@ -174,10 +179,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       style: const TextStyle(color: AppColors.textDark, fontSize: 16),
       decoration: InputDecoration(
         labelText: 'Contraseña',
-        labelStyle: const TextStyle(color: AppColors.secondary, fontWeight: FontWeight.w500),
+        labelStyle: const TextStyle(
+            color: AppColors.secondary, fontWeight: FontWeight.w500),
         filled: true,
         fillColor: AppColors.accent,
-        contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
         suffixIcon: IconButton(
           icon: Icon(
             _obscurePassword ? Icons.visibility_off : Icons.visibility,
@@ -214,16 +221,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
         child: TextFormField(
           decoration: InputDecoration(
             labelText: 'Fecha de nacimiento',
-            labelStyle: const TextStyle(color: AppColors.secondary, fontWeight: FontWeight.w500),
+            labelStyle: const TextStyle(
+                color: AppColors.secondary, fontWeight: FontWeight.w500),
             filled: true,
             fillColor: AppColors.accent,
-            contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+            contentPadding:
+                const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
             enabledBorder: OutlineInputBorder(
               borderSide: const BorderSide(color: AppColors.highlight),
               borderRadius: BorderRadius.circular(8),
             ),
             focusedBorder: OutlineInputBorder(
-              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+              borderSide:
+                  const BorderSide(color: AppColors.primary, width: 1.5),
               borderRadius: BorderRadius.circular(8),
             ),
           ),
@@ -253,7 +263,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       },
       decoration: InputDecoration(
         labelText: 'Sexo',
-        labelStyle: const TextStyle(color: AppColors.secondary, fontWeight: FontWeight.w500),
+        labelStyle: const TextStyle(
+            color: AppColors.secondary, fontWeight: FontWeight.w500),
         filled: true,
         fillColor: AppColors.accent,
         contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
@@ -290,39 +301,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     try {
-      await FirebaseFirestore.instance.collection('usuarios').add({
+      // 1. Crea el usuario en Firebase Auth (genera UID automático)
+      final userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      // 2. Guarda los datos en Firestore usando el UID como ID del documento
+      await FirebaseFirestore.instance
+          .collection('usuarios')
+          .doc(userCredential.user!.uid) // ¡UID automático aquí!
+          .set({
         'nombres': _nombresController.text.trim(),
         'apellidos': _apellidosController.text.trim(),
         'email': _emailController.text.trim(),
-        'contraseña': _passwordController.text.trim(),
-        'edad': int.parse(_edadController.text.trim()),
+        'edad': _edadController.text.trim(),
         'fechaNacimiento': _fechaNacimiento,
         'sexo': _sexoSeleccionado,
-        'condicionMedica': 'Ninguna',
         'fechaRegistro': FieldValue.serverTimestamp(),
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Datos registrados correctamente')),
-      );
-
-      Navigator.pushReplacementNamed(context, '/login');
+      Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al guardar: ${e.toString()}')),
-      );
-    }
-
-    try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        password: _passwordController.text.trim(),
-        email: _emailController.text.trim(),
-      );
-      // Después del registro exitoso, deja que Firebase lo detecte y redirija.
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: ${e.toString()}")),
+        SnackBar(content: Text('Error al registrar: ${e.toString()}')),
       );
     }
   }

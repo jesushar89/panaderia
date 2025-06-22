@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../theme/colors.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -47,7 +48,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 30),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 28),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 18, vertical: 28),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
@@ -67,19 +69,24 @@ class _LoginScreenState extends State<LoginScreen> {
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
-                          style: const TextStyle(color: AppColors.textDark, fontSize: 16),
+                          style: const TextStyle(
+                              color: AppColors.textDark, fontSize: 16),
                           decoration: InputDecoration(
                             labelText: 'Correo electrónico',
-                            labelStyle: const TextStyle(color: AppColors.secondary),
+                            labelStyle:
+                                const TextStyle(color: AppColors.secondary),
                             filled: true,
                             fillColor: AppColors.accent,
-                            contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+                            contentPadding: const EdgeInsets.symmetric(
+                                vertical: 14, horizontal: 10),
                             enabledBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(color: AppColors.highlight),
+                              borderSide:
+                                  const BorderSide(color: AppColors.highlight),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             focusedBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                              borderSide: const BorderSide(
+                                  color: AppColors.primary, width: 1.5),
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
@@ -95,24 +102,31 @@ class _LoginScreenState extends State<LoginScreen> {
                         TextFormField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
-                          style: const TextStyle(color: AppColors.textDark, fontSize: 16),
+                          style: const TextStyle(
+                              color: AppColors.textDark, fontSize: 16),
                           decoration: InputDecoration(
                             labelText: 'Contraseña',
-                            labelStyle: const TextStyle(color: AppColors.secondary),
+                            labelStyle:
+                                const TextStyle(color: AppColors.secondary),
                             filled: true,
                             fillColor: AppColors.accent,
-                            contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+                            contentPadding: const EdgeInsets.symmetric(
+                                vertical: 14, horizontal: 10),
                             enabledBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(color: AppColors.highlight),
+                              borderSide:
+                                  const BorderSide(color: AppColors.highlight),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             focusedBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                              borderSide: const BorderSide(
+                                  color: AppColors.primary, width: 1.5),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             suffixIcon: IconButton(
                               icon: Icon(
-                                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                _obscurePassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
                                 color: AppColors.primary,
                               ),
                               onPressed: () {
@@ -137,7 +151,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             style: OutlinedButton.styleFrom(
                               backgroundColor: AppColors.primary,
                               foregroundColor: Colors.white,
-                              side: const BorderSide(color: AppColors.primary, width: 1.4),
+                              side: const BorderSide(
+                                  color: AppColors.primary, width: 1.4),
                               padding: const EdgeInsets.symmetric(vertical: 15),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
@@ -145,7 +160,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             child: const Text(
                               'Iniciar sesión',
-                              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                  fontSize: 17, fontWeight: FontWeight.bold),
                             ),
                           ),
                         ),
@@ -169,7 +185,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           },
                           child: const Text(
                             '¿Olvidaste tu contraseña?',
-                            style: TextStyle(color: AppColors.secondary, fontWeight: FontWeight.w500),
+                            style: TextStyle(
+                                color: AppColors.secondary,
+                                fontWeight: FontWeight.w500),
                           ),
                         ),
                       ],
@@ -210,26 +228,46 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     try {
-      final query = await FirebaseFirestore.instance
+      // 1. Autenticación con Firebase Auth
+      final userCredential =
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      // 2. (Opcional) Verificar si el usuario tiene datos en Firestore
+      final userDoc = await FirebaseFirestore.instance
           .collection('usuarios')
-          .where('email', isEqualTo: _emailController.text.trim())
-          .where('contraseña', isEqualTo: _passwordController.text.trim())
+          .doc(userCredential.user!.uid)
           .get();
 
-      if (query.docs.isNotEmpty) {
-        final userData = query.docs.first.data();
-        final nombre = userData['nombres'];
-
-        print('✔ Usuario válido: $nombre');
+      if (userDoc.exists) {
+        // 3. Navegar al home y mostrar datos del usuario
+        print('✔ Usuario válido: ${userDoc.data()!['nombres']}');
         Navigator.pushReplacementNamed(context, '/home');
       } else {
+        // Caso especial: usuario en Auth pero sin datos en Firestore
+        await FirebaseAuth.instance.signOut(); // Cerrar sesión forzada
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Correo o contraseña incorrectos')),
+          const SnackBar(
+              content: Text(
+                  'Datos de usuario no encontrados. Regístrese nuevamente.')),
         );
       }
+    } on FirebaseAuthException catch (e) {
+      // Manejo específico de errores de autenticación
+      String errorMessage;
+      if (e.code == 'user-not-found' || e.code == 'wrong-password') {
+        errorMessage = 'Correo o contraseña incorrectos';
+      } else {
+        errorMessage = 'Error al iniciar sesión: ${e.message}';
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al iniciar sesión: ${e.toString()}')),
+        SnackBar(content: Text('Error inesperado: ${e.toString()}')),
       );
     }
   }

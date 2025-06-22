@@ -9,7 +9,8 @@ class ProductosCategoriaScreen extends StatefulWidget {
   const ProductosCategoriaScreen({super.key, required this.categoria});
 
   @override
-  State<ProductosCategoriaScreen> createState() => _ProductosCategoriaScreenState();
+  State<ProductosCategoriaScreen> createState() =>
+      _ProductosCategoriaScreenState();
 }
 
 class _ProductosCategoriaScreenState extends State<ProductosCategoriaScreen> {
@@ -18,6 +19,11 @@ class _ProductosCategoriaScreenState extends State<ProductosCategoriaScreen> {
   TextEditingController searchController = TextEditingController();
 
   String selectedFilter = 'Sin filtros';
+
+  String _convertDriveUrl(String url) {
+    final fileId = url.split('/')[5]; // Extrae el ID del archivo
+    return 'https://drive.google.com/drive/folders/1yoqIb8p4sBybnjadEz7L-uwJJyO3nNXP?usp=sharing'; // URL directa
+  }
 
   void _agregarAlCarrito(Map<String, dynamic> producto) async {
     try {
@@ -98,7 +104,8 @@ class _ProductosCategoriaScreenState extends State<ProductosCategoriaScreen> {
         backgroundColor: AppColors.primary,
         title: Text(
           widget.categoria[0].toUpperCase() + widget.categoria.substring(1),
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style:
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
@@ -121,17 +128,20 @@ class _ProductosCategoriaScreenState extends State<ProductosCategoriaScreen> {
                     },
                     decoration: InputDecoration(
                       hintText: 'Buscar productos...',
-                      prefixIcon: const Icon(Icons.search, color: AppColors.secondary),
+                      prefixIcon:
+                          const Icon(Icons.search, color: AppColors.secondary),
                       filled: true,
                       fillColor: AppColors.accent,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 0),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 18, vertical: 0),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide(color: AppColors.highlight),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: AppColors.primary, width: 1.5),
+                        borderSide:
+                            BorderSide(color: AppColors.primary, width: 1.5),
                       ),
                     ),
                   ),
@@ -140,7 +150,8 @@ class _ProductosCategoriaScreenState extends State<ProductosCategoriaScreen> {
                 // Filtro
                 DropdownButtonHideUnderline(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
                     decoration: BoxDecoration(
                       color: AppColors.accent,
                       borderRadius: BorderRadius.circular(8),
@@ -148,7 +159,8 @@ class _ProductosCategoriaScreenState extends State<ProductosCategoriaScreen> {
                     ),
                     child: DropdownButton<String>(
                       value: selectedFilter,
-                      icon: const Icon(Icons.filter_list, color: AppColors.secondary),
+                      icon: const Icon(Icons.filter_list,
+                          color: AppColors.secondary),
                       items: <String>[
                         'Sin filtros',
                         'Mayor Precio',
@@ -162,7 +174,8 @@ class _ProductosCategoriaScreenState extends State<ProductosCategoriaScreen> {
                           value: value,
                           child: Text(
                             value,
-                            style: const TextStyle(fontSize: 14, color: AppColors.textDark),
+                            style: const TextStyle(
+                                fontSize: 14, color: AppColors.textDark),
                           ),
                         );
                       }).toList(),
@@ -186,9 +199,11 @@ class _ProductosCategoriaScreenState extends State<ProductosCategoriaScreen> {
                   .snapshots(),
               builder: (context, carritoSnapshot) {
                 if (carritoSnapshot.hasError) {
-                  return const Center(child: Text('Error al cargar el carrito'));
+                  return const Center(
+                      child: Text('Error al cargar el carrito'));
                 }
-                if (carritoSnapshot.connectionState == ConnectionState.waiting) {
+                if (carritoSnapshot.connectionState ==
+                    ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
                 final carritoItems = carritoSnapshot.data!.docs;
@@ -197,45 +212,66 @@ class _ProductosCategoriaScreenState extends State<ProductosCategoriaScreen> {
                   cantidades[producto['nombre']] = producto['cantidad'];
                 }
                 return StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instance.collection('productos').snapshots(),
+                  stream: FirebaseFirestore.instance
+                      .collection('productos')
+                      .snapshots(),
                   builder: (context, productosSnapshot) {
                     if (productosSnapshot.hasError) {
-                      return const Center(child: Text('Error al cargar productos'));
+                      return const Center(
+                          child: Text('Error al cargar productos'));
                     }
-                    if (productosSnapshot.connectionState == ConnectionState.waiting) {
+                    if (productosSnapshot.connectionState ==
+                        ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
                     }
                     final todosLosProductos = productosSnapshot.data!.docs;
                     final productosFiltrados = todosLosProductos.where((doc) {
                       final data = doc.data() as Map<String, dynamic>;
-                      final nombre = data['nombre']?.toString().toLowerCase() ?? '';
-                      final coincideBusqueda = searchQuery.isEmpty || nombre.contains(searchQuery);
-                      final coincideCategoria = widget.categoria == 'todos'
-                          || data['categoria']?.toString().toLowerCase() == widget.categoria.toLowerCase();
+                      final nombre =
+                          data['nombre']?.toString().toLowerCase() ?? '';
+                      final coincideBusqueda =
+                          searchQuery.isEmpty || nombre.contains(searchQuery);
+                      final coincideCategoria = widget.categoria == 'todos' ||
+                          data['categoria']?.toString().toLowerCase() ==
+                              widget.categoria.toLowerCase();
                       return coincideBusqueda && coincideCategoria;
                     }).toList();
                     // Ordenar
                     if (selectedFilter == 'Ordenar de A a Z') {
                       productosFiltrados.sort((a, b) {
-                        final nombreA = (a.data() as Map<String, dynamic>)['nombre'].toString().toLowerCase();
-                        final nombreB = (b.data() as Map<String, dynamic>)['nombre'].toString().toLowerCase();
+                        final nombreA =
+                            (a.data() as Map<String, dynamic>)['nombre']
+                                .toString()
+                                .toLowerCase();
+                        final nombreB =
+                            (b.data() as Map<String, dynamic>)['nombre']
+                                .toString()
+                                .toLowerCase();
                         return nombreA.compareTo(nombreB);
                       });
                     } else if (selectedFilter == 'Ordenar de Z a A') {
                       productosFiltrados.sort((a, b) {
-                        final nombreA = (a.data() as Map<String, dynamic>)['nombre'].toString().toLowerCase();
-                        final nombreB = (b.data() as Map<String, dynamic>)['nombre'].toString().toLowerCase();
+                        final nombreA =
+                            (a.data() as Map<String, dynamic>)['nombre']
+                                .toString()
+                                .toLowerCase();
+                        final nombreB =
+                            (b.data() as Map<String, dynamic>)['nombre']
+                                .toString()
+                                .toLowerCase();
                         return nombreB.compareTo(nombreA);
                       });
                     }
                     if (productosFiltrados.isEmpty) {
-                      return const Center(child: Text('No se encontraron productos'));
+                      return const Center(
+                          child: Text('No se encontraron productos'));
                     }
                     return ListView.separated(
                       separatorBuilder: (_, __) => const SizedBox(height: 10),
                       itemCount: productosFiltrados.length,
                       itemBuilder: (context, index) {
-                        final producto = productosFiltrados[index].data() as Map<String, dynamic>;
+                        final producto = productosFiltrados[index].data()
+                            as Map<String, dynamic>;
                         final nombre = producto['nombre'];
                         final puntuacion = producto['puntuacion'] ?? 0;
                         cantidades.putIfAbsent(nombre, () => 0);
@@ -243,12 +279,14 @@ class _ProductosCategoriaScreenState extends State<ProductosCategoriaScreen> {
                         return Consumer<CartProvider>(
                           builder: (context, cart, child) {
                             return Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 18, vertical: 0),
+                              margin: const EdgeInsets.symmetric(
+                                  horizontal: 18, vertical: 0),
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
                                 color: AppColors.accent,
                                 borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: AppColors.highlight, width: 1),
+                                border: Border.all(
+                                    color: AppColors.highlight, width: 1),
                                 boxShadow: [
                                   BoxShadow(
                                     color: AppColors.primary.withOpacity(0.08),
@@ -261,7 +299,8 @@ class _ProductosCategoriaScreenState extends State<ProductosCategoriaScreen> {
                                 children: [
                                   // Imagen circular de producto
                                   CircleAvatar(
-                                    backgroundImage: NetworkImage(producto['imagen']),
+                                    backgroundImage: NetworkImage(
+                                        _convertDriveUrl(producto['imagen'])),
                                     radius: 30,
                                     backgroundColor: Colors.white,
                                   ),
@@ -269,7 +308,8 @@ class _ProductosCategoriaScreenState extends State<ProductosCategoriaScreen> {
                                   // Info del producto
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           nombre,
@@ -282,25 +322,38 @@ class _ProductosCategoriaScreenState extends State<ProductosCategoriaScreen> {
                                         const SizedBox(height: 2),
                                         Text(
                                           'S/.${producto['precio']} soles',
-                                          style: const TextStyle(fontSize: 14, color: AppColors.secondary),
+                                          style: const TextStyle(
+                                              fontSize: 14,
+                                              color: AppColors.secondary),
                                         ),
                                         Row(
                                           children: List.generate(5, (i) {
                                             return Icon(
-                                              i < puntuacion ? Icons.star : Icons.star_border,
+                                              i < puntuacion
+                                                  ? Icons.star
+                                                  : Icons.star_border,
                                               color: AppColors.highlight,
                                               size: 18,
                                             );
                                           }),
                                         ),
                                         GestureDetector(
-                                          onTap: () => _mostrarDescripcion(producto),
+                                          onTap: () =>
+                                              _mostrarDescripcion(producto),
                                           child: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: const [
-                                              Icon(Icons.info_outline, size: 18, color: AppColors.secondary),
+                                              Icon(Icons.info_outline,
+                                                  size: 18,
+                                                  color: AppColors.secondary),
                                               SizedBox(width: 3),
-                                              Text('Ver detalles', style: TextStyle(fontSize: 13, color: AppColors.secondary, decoration: TextDecoration.underline)),
+                                              Text('Ver detalles',
+                                                  style: TextStyle(
+                                                      fontSize: 13,
+                                                      color:
+                                                          AppColors.secondary,
+                                                      decoration: TextDecoration
+                                                          .underline)),
                                             ],
                                           ),
                                         ),
@@ -311,13 +364,20 @@ class _ProductosCategoriaScreenState extends State<ProductosCategoriaScreen> {
                                   Row(
                                     children: [
                                       IconButton(
-                                        icon: const Icon(Icons.remove_circle_outline, color: AppColors.secondary),
-                                        onPressed: () => _disminuirCantidad(producto),
+                                        icon: const Icon(
+                                            Icons.remove_circle_outline,
+                                            color: AppColors.secondary),
+                                        onPressed: () =>
+                                            _disminuirCantidad(producto),
                                       ),
-                                      Text('${cantidades[nombre] ?? 0}', style: const TextStyle(fontSize: 16)),
+                                      Text('${cantidades[nombre] ?? 0}',
+                                          style: const TextStyle(fontSize: 16)),
                                       IconButton(
-                                        icon: const Icon(Icons.add_circle_outline, color: AppColors.primary),
-                                        onPressed: () => _agregarAlCarrito(producto),
+                                        icon: const Icon(
+                                            Icons.add_circle_outline,
+                                            color: AppColors.primary),
+                                        onPressed: () =>
+                                            _agregarAlCarrito(producto),
                                       ),
                                     ],
                                   ),
