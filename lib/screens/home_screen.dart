@@ -178,7 +178,7 @@ class _InicioScreen extends StatelessWidget {
         ),
         const SizedBox(height: 30),
         const Text(
-          '🧁 Productos recientes',
+          '✨ Productos Novedosos',
           style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.bold,
@@ -193,39 +193,116 @@ class _InicioScreen extends StatelessWidget {
 
   // Método para cargar los productos recientes desde Firestore
   Widget _productosRecientes() {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('productos')
-          .orderBy('timestamp', descending: true)
-          .limit(3)
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
+  return StreamBuilder<QuerySnapshot>(
+    stream: FirebaseFirestore.instance
+        .collection('productos')
+        .orderBy('timestamp', descending: true)
+        .limit(6)
+        .snapshots(),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Center(child: CircularProgressIndicator());
+      }
 
-        if (snapshot.hasError) {
-          return const Center(child: Text('Error al cargar productos'));
-        }
+      if (snapshot.hasError) {
+        return const Center(child: Text('Error al cargar productos'));
+      }
 
-        final productos = snapshot.data!.docs;
+      final productos = snapshot.data!.docs;
 
-        if (productos.isEmpty) {
-          return const Center(child: Text('No hay productos recientes'));
-        }
+      if (productos.isEmpty) {
+        return const Center(child: Text('No hay productos recientes'));
+      }
 
-        return Column(
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        child: GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 14,
+          crossAxisSpacing: 14,
+          childAspectRatio: 1,
           children: productos.map((doc) {
-            var producto = doc.data() as Map<String, dynamic>;
-            return _productoCard(
-              producto['nombre'],
-              producto['imagen'] ?? 'assets/images/pan.png',
+            final producto = doc.data() as Map<String, dynamic>;
+            final nombre = producto['nombre'] ?? 'Sin nombre';
+            final imagenUrl = _convertDriveUrl(producto['imagen']);
+
+            return GestureDetector(
+              onTap: () {
+                // Aquí podrías ir al detalle del producto si deseas
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
+                  gradient: const LinearGradient(
+                    colors: [Color.fromARGB(255, 41, 97, 107), Color.fromARGB(255, 140, 196, 210)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color.fromARGB(255, 93, 228, 210).withOpacity(0.15),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                  border: Border.all(color: Colors.brown.shade700, width: 2),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(60),
+                      child: Image.network(
+                        imagenUrl,
+                        width: 70,
+                        height: 70,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const Icon(Icons.error),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                      child: Text(
+                        nombre,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             );
           }).toList(),
-        );
-      },
-    );
+        ),
+      );
+    },
+  );
+}
+
+
+String _convertDriveUrl(String? url) {
+  if (url == null || !url.contains('/')) {
+    return 'https://via.placeholder.com/150';
   }
+
+  final parts = url.split('/');
+  if (parts.length > 5) {
+    final fileId = parts[5];
+    return 'https://drive.google.com/uc?export=view&id=$fileId';
+  }
+
+  return 'https://via.placeholder.com/150';
+}
+
 
   static Widget _productoCard(String nombre, String imgPath) {
     return Container(

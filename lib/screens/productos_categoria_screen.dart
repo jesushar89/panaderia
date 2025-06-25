@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
 import '../theme/colors.dart';
+import 'producto_detalle_screen.dart';
+
 
 class ProductosCategoriaScreen extends StatefulWidget {
   final String categoria;
@@ -20,10 +22,17 @@ class _ProductosCategoriaScreenState extends State<ProductosCategoriaScreen> {
 
   String selectedFilter = 'Sin filtros';
 
-  String _convertDriveUrl(String url) {
-    final fileId = url.split('/')[5]; // Extrae el ID del archivo
-    return 'https://drive.google.com/drive/folders/1yoqIb8p4sBybnjadEz7L-uwJJyO3nNXP?usp=sharing'; // URL directa
+  String _convertDriveUrl(String? url) {
+  if (url == null || !url.contains('/')) {
+    return 'https://via.placeholder.com/150'; // Imagen por defecto
   }
+  final parts = url.split('/');
+  if (parts.length > 5) {
+    final fileId = parts[5];
+    return 'https://drive.google.com/uc?export=view&id=$fileId';
+  }
+  return 'https://via.placeholder.com/150';
+}
 
   void _agregarAlCarrito(Map<String, dynamic> producto) async {
     try {
@@ -77,23 +86,12 @@ class _ProductosCategoriaScreenState extends State<ProductosCategoriaScreen> {
   }
 
   void _mostrarDescripcion(Map<String, dynamic> producto) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(producto['nombre']),
-          content: Text(producto['descripcion'] ?? 'Sin descripción'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cerrar'),
-            ),
-          ],
-        );
-      },
-    );
+    Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => ProductoDetalleScreen(producto: producto),
+    ),
+  );
   }
 
   @override
@@ -300,7 +298,8 @@ class _ProductosCategoriaScreenState extends State<ProductosCategoriaScreen> {
                                   // Imagen circular de producto
                                   CircleAvatar(
                                     backgroundImage: NetworkImage(
-                                        _convertDriveUrl(producto['imagen'])),
+                                       _convertDriveUrl(producto['imagen'] ?? ''),
+                                      ),
                                     radius: 30,
                                     backgroundColor: Colors.white,
                                   ),
