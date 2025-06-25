@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../theme/colors.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class CarritoScreen extends StatefulWidget {
   const CarritoScreen({super.key});
@@ -21,11 +22,66 @@ class _CarritoScreenState extends State<CarritoScreen> {
     }
   }
 
-  void _confirmarPedido(BuildContext context) {
+void _confirmarPedido(BuildContext context) async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) return;
+
+  final carritoSnapshot = await FirebaseFirestore.instance
+      .collection('carrito')
+      .where('userId', isEqualTo: user.uid)
+      .get();
+
+  if (carritoSnapshot.docs.isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Pedido confirmado')),
+      const SnackBar(content: Text('Tu carrito está vacío')),
     );
+    return;
   }
+
+  List<Map<String, dynamic>> productos = [];
+
+  for (var doc in carritoSnapshot.docs) {
+    final data = doc.data();
+    productos.add({
+      'nombre': data['nombre'],
+      'precio': data['precio'],
+      'cantidad': data['cantidad'],
+      'imagen': data['imagen'],
+    });
+  }
+
+  await FirebaseFirestore.instance.collection('pedidos').add({
+    'userId': user.uid,
+    'productos': productos,
+    'estado': 'Pendiente',
+    'tipoEntrega': tipoEntrega,
+    'timestamp': FieldValue.serverTimestamp(),
+  });
+
+  // Borra el carrito después de confirmar
+  for (var doc in carritoSnapshot.docs) {
+    await doc.reference.delete();
+  }
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text('✅ Pedido confirmado')),
+  );
+}
+
+  String _convertDriveUrl(String? url) {
+  if (url == null || !url.contains('/')) {
+    return 'https://via.placeholder.com/100'; // Imagen temporal si no hay válida
+  }
+
+  final parts = url.split('/');
+  if (parts.length > 5) {
+    final fileId = parts[5];
+    return 'https://drive.google.com/uc?export=view&id=$fileId';
+  }
+
+  return 'https://via.placeholder.com/100';
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -121,12 +177,16 @@ class _CarritoScreenState extends State<CarritoScreen> {
                         leading: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: Image.network(
-                            producto['imagen'],
+                            _convertDriveUrl(producto['imagen']),
                             width: 46,
                             height: 46,
                             fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(Icons.broken_image, size: 46, color: Colors.grey);
+                            },
                           ),
                         ),
+
                         title: Text(
                           producto['nombre'],
                           style: const TextStyle(

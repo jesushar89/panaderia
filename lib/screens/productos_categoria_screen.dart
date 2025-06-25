@@ -35,53 +35,65 @@ class _ProductosCategoriaScreenState extends State<ProductosCategoriaScreen> {
 }
 
   void _agregarAlCarrito(Map<String, dynamic> producto) async {
-    try {
-      final cart = Provider.of<CartProvider>(context, listen: false);
-      final carritoRef = FirebaseFirestore.instance.collection('carrito');
-      final existente = await carritoRef
-          .where('nombre', isEqualTo: producto['nombre'])
-          .limit(1)
-          .get();
+      try {
+        final nombre = producto['nombre'];
+        final carritoRef = FirebaseFirestore.instance.collection('carrito');
+        final query = await carritoRef.where('nombre', isEqualTo: nombre).limit(1).get();
 
-      if (existente.docs.isNotEmpty) {
-        final doc = existente.docs.first;
-        final data = doc.data();
-        final nuevaCantidad = (data['cantidad'] ?? 1) + 1;
-        await doc.reference.update({'cantidad': nuevaCantidad});
-      } else {
-        await carritoRef.add({
-          'nombre': producto['nombre'],
-          'precio': producto['precio'],
-          'imagen': producto['imagen'],
-          'cantidad': 1,
-          'timestamp': FieldValue.serverTimestamp(),
-        });
-      }
+        if (query.docs.isNotEmpty) {
+          final doc = query.docs.first;
+          final nuevaCantidad = (doc['cantidad'] ?? 1) + 1;
+          await doc.reference.update({'cantidad': nuevaCantidad});
+          setState(() {
+            cantidades[nombre] = nuevaCantidad;
+          });
+        } else {
+          await carritoRef.add({
+            'nombre': nombre,
+            'precio': producto['precio'],
+            'imagen': producto['imagen'],
+            'cantidad': 1,
+            'timestamp': FieldValue.serverTimestamp(),
+          });
+          setState(() {
+            cantidades[nombre] = 1;
+          });
+        }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${producto['nombre']} agregado al carrito')),
-      );
-    } catch (e) {
-      print('❌ Error al agregar al carrito: $e');
-    }
-  }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$nombre agregado al carrito')),
+        );
+        } catch (e) {
+          print('❌ Error al agregar al carrito: $e');
+        }
+   }
+
 
   void _disminuirCantidad(Map<String, dynamic> producto) async {
-    final carritoRef = FirebaseFirestore.instance.collection('carrito');
-    final existente = await carritoRef
-        .where('nombre', isEqualTo: producto['nombre'])
-        .limit(1)
-        .get();
+    try {
+      final nombre = producto['nombre'];
+      final carritoRef = FirebaseFirestore.instance.collection('carrito');
+      final query = await carritoRef.where('nombre', isEqualTo: nombre).limit(1).get();
 
-    if (existente.docs.isNotEmpty) {
-      final doc = existente.docs.first;
-      final data = doc.data();
-      final nuevaCantidad = (data['cantidad'] ?? 1) - 1;
-      if (nuevaCantidad <= 0) {
-        await doc.reference.delete();
-      } else {
-        await doc.reference.update({'cantidad': nuevaCantidad});
+      if (query.docs.isNotEmpty) {
+        final doc = query.docs.first;
+        final cantidadActual = doc['cantidad'] ?? 1;
+        final nuevaCantidad = cantidadActual - 1;
+
+        if (nuevaCantidad <= 0) {
+          await doc.reference.delete();
+          setState(() {
+            cantidades.remove(nombre);
+          });
+        } else {
+          await doc.reference.update({'cantidad': nuevaCantidad});
+          setState(() {
+            cantidades[nombre] = nuevaCantidad;
+          });
+        }
       }
+    } catch (e) {
+      print('❌ Error al disminuir cantidad: $e');
     }
   }
 
@@ -363,23 +375,20 @@ class _ProductosCategoriaScreenState extends State<ProductosCategoriaScreen> {
                                   Row(
                                     children: [
                                       IconButton(
-                                        icon: const Icon(
-                                            Icons.remove_circle_outline,
-                                            color: AppColors.secondary),
-                                        onPressed: () =>
-                                            _disminuirCantidad(producto),
+                                        icon: const Icon(Icons.remove_circle_outline, color: AppColors.secondary),
+                                        onPressed: () => _disminuirCantidad(producto),
                                       ),
-                                      Text('${cantidades[nombre] ?? 0}',
-                                          style: const TextStyle(fontSize: 16)),
+                                      Text(
+                                        '${cantidades[nombre] ?? 0}',
+                                        style: const TextStyle(fontSize: 16),
+                                      ),
                                       IconButton(
-                                        icon: const Icon(
-                                            Icons.add_circle_outline,
-                                            color: AppColors.primary),
-                                        onPressed: () =>
-                                            _agregarAlCarrito(producto),
+                                        icon: const Icon(Icons.add_circle_outline, color: AppColors.primary),
+                                        onPressed: () => _agregarAlCarrito(producto),
                                       ),
                                     ],
                                   ),
+
                                 ],
                               ),
                             );
